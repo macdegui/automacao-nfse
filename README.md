@@ -1,89 +1,135 @@
 # Automação NFS-e
 
-Sistema de automação para classificação e organização de Notas Fiscais de Serviço Eletrônica (NFS-e) do Portal Nacional.
+Sistema desktop para organização automática de Notas Fiscais de Serviço Eletrônicas (NFS-e) baixadas do portal nacional, classificando e movendo os arquivos (XML + PDF) diretamente para a estrutura de pastas do servidor fiscal da empresa.
 
 ---
 
-## Instalação
+## Funcionalidades
 
-### 1. Instalar dependências
+- **Classificação automática de NFS-e tomadas** em Retidas, Não Retidas e Canceladas, com base na leitura dos campos de retenção do XML (ISSQN, PIS/COFINS, IRRF, CSLL, CP)
+- **Organização de NFS-e emitidas** na estrutura correta do servidor
+- **Suporte a ZIP e pastas** — processa empresas extraindo ZIPs automaticamente
+- **Mapeamento de nomes** via planilha Excel: correlaciona o nome do portal NFSe com o nome real da pasta no servidor
+- **Interface gráfica moderna** (dark mode) com barra de progresso e log de execução em tempo real
+- **Configuração persistente** — salva os caminhos informados para a próxima execução
 
-Abra o Prompt de Comando na pasta do projeto e execute:
+---
+
+## Estrutura de destino gerada
 
 ```
+Servidor Z:/
+└── <Nome da Empresa>/
+    └── Fiscal/
+        └── Fechamento Fiscal/
+            └── <Ano>/
+                └── <Mês>/
+                    ├── Tomadas/
+                    │   ├── Retidas/
+                    │   ├── Não Retidas/
+                    │   └── Canceladas/
+                    └── Emitidas/
+```
+
+---
+
+## Requisitos
+
+- Python 3.10+
+- Dependências listadas em `requirements.txt`
+
+```
+customtkinter>=5.2.0
+openpyxl>=3.1.0
+```
+
+Instale com:
+
+```bash
 pip install -r requirements.txt
-```
-
-### 2. Criar o arquivo de configuração
-
-Execute uma vez para gerar o `config.xlsx`:
-
-```
-python criar_config.py
-```
-
-Abra o `config.xlsx` e preencha o mapeamento de empresas:
-
-| Nome no Portal NFSe | Nome na Pasta do Servidor |
-|---|---|
-| EL COMMERCE UTILIDADES E SERVICOS LTDA | El Commerce |
-| EMPRESA EXEMPLO LTDA | Empresa Exemplo |
-
-### 3. Executar o sistema
-
-```
-python interface.py
 ```
 
 ---
 
 ## Como usar
 
-1. **Pasta de Origem** → Selecione a pasta onde o portal baixou as notas (ex: `C:\Users\...\Downloads\NFSe`)
-2. **Pasta de Destino** → Selecione a raiz dos clientes no servidor (ex: `Z:\Clientes`)
-3. **Mapeamento de Empresas** → Selecione o arquivo `config.xlsx`
-4. Clique em **Executar Automação**
+### 1. Gerar o arquivo de configuração (primeira vez)
 
-As configurações são salvas automaticamente para a próxima execução.
+Execute `criar_config.py` para gerar o arquivo `config.xlsx` com a estrutura de mapeamento de empresas:
 
----
-
-## Estrutura gerada no servidor
-
+```bash
+python criar_config.py
 ```
-Z:\Clientes\
-    Nome da Empresa\
-        Fiscal\
-            Fechamento Fiscal\
-                2026\
-                    Março\
-                        Tomadas\
-                            Retidas\
-                            Não Retidas\
-                        Emitidas\
+
+Preencha a planilha gerada com duas colunas:
+
+| Nome no Portal NFSe | Nome na Pasta do Servidor |
+|---|---|
+| EMPRESA EXEMPLO LTDA | Empresa Exemplo |
+| EL COMMERCE UTILIDADES E SERVICOS LTDA | El Commerce |
+
+### 2. Executar a interface
+
+```bash
+python interface.py
 ```
+
+### 3. Configurar e executar
+
+Na interface, informe:
+
+- **Pasta de Origem** — pasta onde estão as NFS-e baixadas do portal (pastas por empresa ou ZIPs)
+- **Pasta de Destino** — pasta raiz do servidor fiscal (ex: `Z:\`)
+- **Mapeamento de Empresas** — arquivo `config.xlsx` com a correlação de nomes
+
+Clique em **Executar Automação**. O log exibe em tempo real o que está sendo processado.
 
 ---
 
 ## Regras de classificação
 
-| Imposto | Condição |
-|---|---|
-| ISS | `tpRetISSQN = 1` |
-| PIS/COFINS | `tpRetPisCofins = 1` |
-| IRRF | `vRetIRRF > 0` |
-| INSS | `vRetCP > 0` |
-| CSLL/PIS/COFINS | `vRetCSLL > 0` |
+A nota tomada é classificada como **Retida** se qualquer um dos campos abaixo estiver presente no XML:
 
-Qualquer retenção identificada classifica a nota como **Retida**.
+| Campo XML | Condição |
+|---|---|
+| `tpRetISSQN` | `= 1` |
+| `tpRetPisCofins` | `= 1` |
+| `vRetIRRF` | `> 0` |
+| `vRetCP` | `> 0` |
+| `vRetCSLL` | `> 0` |
+
+Caso contrário, é classificada como **Não Retida**. Notas em subpastas com "Cancelad" no nome vão para **Canceladas**.
+
+---
+
+## Arquivos do projeto
+
+| Arquivo | Descrição |
+|---|---|
+| `processador.py` | Lógica de leitura dos XMLs, classificação e movimentação dos arquivos |
+| `interface.py` | Interface gráfica (CustomTkinter) |
+| `criar_config.py` | Script utilitário para gerar o `config.xlsx` modelo |
+| `requirements.txt` | Dependências Python |
+| `icone.ico` | Ícone do executável |
 
 ---
 
 ## Gerar executável (.exe)
 
-```
+Para distribuir sem Python instalado, use o PyInstaller:
+
+```bash
 pip install pyinstaller
-pyinstaller --onefile --windowed --name "AutomacaoNFSe" interface.py
+pyinstaller --onefile --windowed --icon=icone.ico --name AutomacaoNFSe interface.py
 ```
 
-O arquivo `AutomacaoNFSe.exe` será gerado na pasta `dist\`.
+O executável será gerado em `dist\AutomacaoNFSe.exe`.
+
+---
+
+## Observações técnicas
+
+- A leitura dos XMLs usa o namespace oficial do SPED: `http://www.sped.fazenda.gov.br/nfse`
+- Pastas de período são detectadas pelo padrão de data `DD-MM-AAAA` no nome da pasta
+- Nomes de empresas são comparados em maiúsculas para evitar erros de case
+- O arquivo `config.xlsx` e as pastas `build/`, `dist/` e `_teste_automacao/` são ignorados pelo git
