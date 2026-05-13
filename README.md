@@ -66,7 +66,7 @@ Preencha a planilha gerada com duas colunas:
 | Nome no Portal NFSe | Nome na Pasta do Servidor |
 |---|---|
 | EMPRESA EXEMPLO LTDA | Empresa Exemplo |
-| EL COMMERCE UTILIDADES E SERVICOS LTDA | El Commerce |
+| EMPRESA 123 LTDA | EMPRESA123 E AMIGOS |
 
 ### 2. Executar a interface
 
