@@ -1,0 +1,4 @@
+- Não está funcionando o básico, o sistema não reconhece as notas na pasta de origem, especialmente em zip sequer reconhece que tem pasta.
+- Precisa reconhecer os arquivos PDF's também, eles seguem o mesmo nome dos arquivos XML
+- A pasta de download segue esse padrão: C:\Users\fernanda.poli\Downloads\NFSe\CORBINI BRECHO COMERCIO DE ROUPAS LTDA.zip\CORBINI BRECHO COMERCIO DE ROUPAS LTDA\01-03-2026 a 31-03-2026 Recebidas.
+- NÃO APAGAR AS CANCELADAS 
